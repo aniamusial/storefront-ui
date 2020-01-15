@@ -149,7 +149,7 @@ export default {
       lastScrollPosition: 0,
       animationStart: null,
       animationLong: null,
-      animationDuration: 100
+      animationDuration: 300
     };
   },
   computed: {
@@ -179,7 +179,6 @@ export default {
     animationHandler(timestamp) {
       if (!this.animationStart) this.animationStart = timestamp;
       const progress = timestamp - this.animationStart;
-      console.log(progress, this.animationStart);
       if (progress < this.animationDuration) {
         this.animationLong = window.requestAnimationFrame(
           this.animationHandler
@@ -192,6 +191,7 @@ export default {
       const currentScrollPosition =
         window.pageYOffset || document.documentElement.scrollTop;
       this.scrollDirection = currentScrollPosition < this.lastScrollPosition;
+      this.isSearchVisible = currentScrollPosition <= 0;
       this.lastScrollPosition = currentScrollPosition;
     }
   }
