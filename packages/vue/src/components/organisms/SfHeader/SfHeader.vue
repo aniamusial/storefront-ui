@@ -145,7 +145,11 @@ export default {
     return {
       isVisible: true,
       isSearchVisible: true,
-      lastScrollPosition: 0
+      scrollDirection: null, // false = down, true = up
+      lastScrollPosition: 0,
+      animationStart: null,
+      animationLong: null,
+      animationDuration: 100
     };
   },
   computed: {
@@ -153,34 +157,42 @@ export default {
       return this.$el.style.getPropertyValue("--header-desktop-height");
     }
   },
+  watch: {
+    scrollDirection() {
+      window.cancelAnimationFrame(this.animationLong);
+      this.animationLong = null;
+      this.animationStart = null;
+      this.animationLong = window.requestAnimationFrame(this.animationHandler);
+    }
+  },
   mounted() {
     if (this.sticky) {
-      window.addEventListener("scroll", this.onScroll);
+      window.addEventListener("scroll", this.scrollHandler, { passive: true });
     }
   },
   beforeDestroy() {
     if (this.sticky) {
-      window.removeEventListener("scroll", this.onScroll);
+      window.removeEventListener("scroll", this.scrollHandler);
     }
   },
   methods: {
-    onScroll() {
+    animationHandler(timestamp) {
+      if (!this.animationStart) this.animationStart = timestamp;
+      const progress = timestamp - this.animationStart;
+      console.log(progress, this.animationStart);
+      if (progress < this.animationDuration) {
+        this.animationLong = window.requestAnimationFrame(
+          this.animationHandler
+        );
+        return;
+      }
+      this.isVisible = this.scrollDirection;
+    },
+    scrollHandler() {
       const currentScrollPosition =
         window.pageYOffset || document.documentElement.scrollTop;
-      if (currentScrollPosition < 0) {
-        return;
-      }
-      if (
-        Math.abs(currentScrollPosition - this.lastScrollPosition) <
-        this.desktopHeight
-      ) {
-        return;
-      }
-      this.isVisible = currentScrollPosition < this.lastScrollPosition;
+      this.scrollDirection = currentScrollPosition < this.lastScrollPosition;
       this.lastScrollPosition = currentScrollPosition;
-      if (this.sticky) {
-        this.isSearchVisible = !document.documentElement.scrollTop;
-      }
     }
   }
 };
